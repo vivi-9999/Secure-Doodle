@@ -8,6 +8,26 @@ import { createHash } from "crypto";
 
 const router = Router();
 
+const defaultAdminHash = createHash("sha256").update("admin123admin-salt").digest("hex");
+
+let adminBootstrapPromise: Promise<void> | null = null;
+
+async function ensureDefaultAdmin() {
+  if (!adminBootstrapPromise) {
+    adminBootstrapPromise = (async () => {
+      const existing = await db.select().from(adminsTable).where(eq(adminsTable.username, "admin"));
+      if (existing.length === 0) {
+        await db.insert(adminsTable).values({
+          username: "admin",
+          passwordHash: defaultAdminHash,
+        });
+      }
+    })();
+  }
+
+  await adminBootstrapPromise;
+}
+
 router.post("/register", async (req, res) => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
@@ -92,6 +112,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/admin/login", async (req, res) => {
+  await ensureDefaultAdmin();
   const parsed = AdminLoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation failed" });
