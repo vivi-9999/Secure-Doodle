@@ -39,6 +39,8 @@ export const RegisterBody = zod.object({
 export const LoginBody = zod.object({
   accountNumber: zod.string(),
   pin: zod.string(),
+  deviceToken: zod.string().optional(),
+  deviceName: zod.string().optional(),
 });
 
 export const LoginResponse = zod.object({
@@ -61,6 +63,7 @@ export const LoginResponse = zod.object({
       hasDuressPin: zod.boolean().optional(),
     })
     .optional(),
+  knownDevice: zod.boolean().optional(),
   role: zod.enum(["user", "admin"]).optional(),
 });
 
@@ -92,6 +95,7 @@ export const AdminLoginResponse = zod.object({
       hasDuressPin: zod.boolean().optional(),
     })
     .optional(),
+  knownDevice: zod.boolean().optional(),
   role: zod.enum(["user", "admin"]).optional(),
 });
 
@@ -120,6 +124,44 @@ export const GetMyProfileResponse = zod.object({
   createdAt: zod.string(),
   duressMode: zod.boolean().optional(),
   hasDuressPin: zod.boolean().optional(),
+});
+
+/**
+ * @summary List all trusted devices for the current user
+ */
+export const GetTrustedDevicesResponse = zod.object({
+  devices: zod.array(
+    zod.object({
+      id: zod.number(),
+      deviceToken: zod.string(),
+      deviceName: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Register a new trusted device
+ */
+export const AddTrustedDeviceBody = zod.object({
+  currentPin: zod.string(),
+  deviceToken: zod.string(),
+  deviceName: zod.string(),
+});
+
+export const AddTrustedDeviceResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Remove a trusted device
+ */
+export const RemoveTrustedDeviceParams = zod.object({
+  token: zod.coerce.string(),
+});
+
+export const RemoveTrustedDeviceResponse = zod.object({
+  message: zod.string(),
 });
 
 /**

@@ -5,6 +5,7 @@ import { AdminGetUsersQueryParams, AdminGetTransactionsQueryParams, AdminActivat
 import { decryptTransactionData } from "../lib/crypto";
 import { desc } from "drizzle-orm";
 import { getDuressEvents } from "../lib/duressEvents";
+import { getDeviceEvents } from "../lib/deviceEvents";
 
 const router = Router();
 
@@ -236,6 +237,24 @@ router.get("/firewall", requireAdmin, async (req, res) => {
   }));
 
   // Inject duress login events as CRITICAL synthetic events
+  // Inject unknown device login events as HIGH severity
+  const deviceEvts = getDeviceEvents().map((de, i) => ({
+    id: -(1000 + i + 1),
+    eventId: `DEVICE-${String(i + 1).padStart(4, "0")}`,
+    timestamp: de.timestamp.toISOString(),
+    severity: "high" as const,
+    riskScore: 75,
+    type: "transfer" as const,
+    amount: 0,
+    fromAccount: de.accountNumber,
+    toAccount: null,
+    fromName: de.userName,
+    toName: null,
+    status: "success",
+    riskFlags: ["UNKNOWN_DEVICE_LOGIN", "UNREGISTERED_BROWSER", "VERIFY_IDENTITY"],
+    description: `🖥️ NEW DEVICE LOGIN — ${de.userName} logged in from unrecognized device "${de.deviceName}" (IP: ${de.ip})`,
+  }));
+
   const duressEvts = getDuressEvents().map((de, i) => ({
     id: -(i + 1),
     eventId: `DURESS-${String(i + 1).padStart(4, "0")}`,
@@ -253,7 +272,7 @@ router.get("/firewall", requireAdmin, async (req, res) => {
     description: `⚠️ DURESS ACCESS — ${de.userName} logged in using Emergency PIN from IP ${de.ip}`,
   }));
 
-  const allEvents = [...duressEvts, ...events].sort(
+  const allEvents = [...deviceEvts, ...duressEvts, ...events].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 

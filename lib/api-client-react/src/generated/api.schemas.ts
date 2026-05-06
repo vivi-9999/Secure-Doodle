@@ -37,6 +37,21 @@ export interface RegisterBody {
 export interface LoginBody {
   accountNumber: string;
   pin: string;
+  deviceToken?: string;
+  deviceName?: string;
+}
+
+export interface TrustedDevice {
+  id: number;
+  deviceToken: string;
+  deviceName: string;
+  createdAt: string;
+}
+
+export interface TrustDeviceBody {
+  currentPin: string;
+  deviceToken: string;
+  deviceName: string;
 }
 
 export interface AdminLoginBody {
@@ -81,6 +96,7 @@ export interface UserProfile {
 export interface AuthResponse {
   message: string;
   user?: UserProfile;
+  knownDevice?: boolean;
   role?: AuthResponseRole;
 }
 
@@ -306,6 +322,10 @@ export interface FirewallResponse {
   events: FirewallEvent[];
   stats: FirewallResponseStats;
 }
+
+export type GetTrustedDevices200 = {
+  devices: TrustedDevice[];
+};
 
 export type GetTransactionHistoryParams = {
   limit?: number;

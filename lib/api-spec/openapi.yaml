@@ -140,6 +140,67 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /users/trusted-devices:
+    get:
+      operationId: getTrustedDevices
+      tags: [users]
+      summary: List all trusted devices for the current user
+      responses:
+        "200":
+          description: List of trusted devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TrustedDevice"
+                required: [devices]
+    post:
+      operationId: addTrustedDevice
+      tags: [users]
+      summary: Register a new trusted device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrustDeviceBody"
+      responses:
+        "200":
+          description: Device trusted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid PIN or device already trusted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/trusted-devices/{token}:
+    delete:
+      operationId: removeTrustedDevice
+      tags: [users]
+      summary: Remove a trusted device
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Device removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
   /users/duress-pin:
     put:
       operationId: setDuressPin
@@ -563,7 +624,35 @@ components:
           type: string
         pin:
           type: string
+        deviceToken:
+          type: string
+        deviceName:
+          type: string
       required: [accountNumber, pin]
+
+    TrustedDevice:
+      type: object
+      properties:
+        id:
+          type: integer
+        deviceToken:
+          type: string
+        deviceName:
+          type: string
+        createdAt:
+          type: string
+      required: [id, deviceToken, deviceName, createdAt]
+
+    TrustDeviceBody:
+      type: object
+      properties:
+        currentPin:
+          type: string
+        deviceToken:
+          type: string
+        deviceName:
+          type: string
+      required: [currentPin, deviceToken, deviceName]
 
     AdminLoginBody:
       type: object
@@ -581,6 +670,8 @@ components:
           type: string
         user:
           $ref: "#/components/schemas/UserProfile"
+        knownDevice:
+          type: boolean
         role:
           type: string
           enum: [user, admin]

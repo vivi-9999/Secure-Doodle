@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
-import { UpdatePinBody, SetDuressPinBody } from "@workspace/api-zod";
+import { eq, and } from "drizzle-orm";
+import { db, usersTable, trustedDevicesTable } from "@workspace/db";
+import { UpdatePinBody, SetDuressPinBody, AddTrustedDeviceBody } from "@workspace/api-zod";
 import { hashPin, verifyPin } from "../lib/pinHash";
+import { randomUUID } from "crypto";
 
 const router = Router();
 
@@ -40,6 +41,54 @@ router.get("/me", requireAuth, async (req: any, res) => {
     duressMode,
     hasDuressPin: !!user.duressPinHash,
   });
+});
+
+router.get("/trusted-devices", requireAuth, async (req: any, res) => {
+  const devices = await db.select().from(trustedDevicesTable).where(eq(trustedDevicesTable.userId, req.session.userId));
+  res.json({
+    devices: devices.map(d => ({
+      id: d.id,
+      deviceToken: d.deviceToken,
+      deviceName: d.deviceName,
+      createdAt: d.createdAt.toISOString(),
+    })),
+  });
+});
+
+router.post("/trusted-devices", requireAuth, async (req: any, res) => {
+  const parsed = AddTrustedDeviceBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed" });
+    return;
+  }
+  const { currentPin, deviceToken, deviceName } = parsed.data;
+
+  const users = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId));
+  const user = users[0];
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  if (!verifyPin(currentPin, user.pinHash)) {
+    res.status(400).json({ error: "Current PIN is incorrect" });
+    return;
+  }
+
+  const existing = await db.select().from(trustedDevicesTable).where(
+    and(eq(trustedDevicesTable.userId, user.id), eq(trustedDevicesTable.deviceToken, deviceToken))
+  );
+  if (existing.length > 0) {
+    res.status(400).json({ error: "Device is already trusted" });
+    return;
+  }
+
+  await db.insert(trustedDevicesTable).values({ userId: user.id, deviceToken, deviceName });
+  res.json({ message: "Device trusted successfully" });
+});
+
+router.delete("/trusted-devices/:token", requireAuth, async (req: any, res) => {
+  const { token } = req.params;
+  await db.delete(trustedDevicesTable).where(
+    and(eq(trustedDevicesTable.userId, req.session.userId), eq(trustedDevicesTable.deviceToken, token))
+  );
+  res.json({ message: "Device removed" });
 });
 
 router.put("/duress-pin", requireAuth, async (req: any, res) => {

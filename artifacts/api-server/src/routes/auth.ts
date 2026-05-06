@@ -6,6 +6,8 @@ import { hashPin, verifyPin } from "../lib/pinHash";
 import { generateAccountNumber } from "../lib/accountNumber";
 import { createHash } from "crypto";
 import { recordDuressLogin } from "../lib/duressEvents";
+import { recordUnknownDeviceLogin } from "../lib/deviceEvents";
+import { trustedDevicesTable } from "@workspace/db";
 
 const router = Router();
 
@@ -103,6 +105,26 @@ router.post("/login", async (req, res) => {
     });
   }
 
+  // Trusted device check
+  const { deviceToken, deviceName } = parsed.data as any;
+  const trustedDevices = await db.select().from(trustedDevicesTable).where(eq(trustedDevicesTable.userId, user.id));
+  let knownDevice = true;
+  if (trustedDevices.length > 0 && deviceToken) {
+    const isKnown = trustedDevices.some(d => d.deviceToken === deviceToken);
+    if (!isKnown) {
+      knownDevice = false;
+      recordUnknownDeviceLogin({
+        userId: user.id,
+        accountNumber: user.accountNumber,
+        userName: `${user.firstName} ${user.lastName}`,
+        deviceName: deviceName || "Unknown device",
+        deviceToken: deviceToken || "none",
+        timestamp: new Date(),
+        ip: (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "unknown",
+      });
+    }
+  }
+
   (req.session as any).userId = user.id;
   (req.session as any).role = "user";
   (req.session as any).duressMode = isDuressPin;
@@ -110,6 +132,7 @@ router.post("/login", async (req, res) => {
   res.json({
     message: "Login successful",
     role: "user",
+    knownDevice,
     user: {
       id: user.id,
       accountNumber: user.accountNumber,

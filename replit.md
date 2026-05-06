@@ -47,6 +47,7 @@ A full-stack secure online banking web app with AES-256-GCM encrypted transactio
 - **Admin flow**: Login → view pending users → activate/reject accounts → monitor all transactions and complaints with system stats
 - **Seeded data**: admin (`admin`/`admin123`), Alice (`SB2024000001`/PIN:`1234`), Bob (`SB2024000002`/PIN:`5678`), Charlie (pending)
 - **USP — Duress PIN / Stealth Mode**: Users set an emergency PIN in Settings. Logging in with it shows a decoy ₹500 account with no real data (session.duressMode=true gates all transaction + balance responses). A CRITICAL `DURESS_ACCESS_DETECTED` event fires silently in the admin Firewall. Dashboard shows "Protected Mode Active" amber banner. hasDuressPin + duressMode fields in UserProfile.
+- **USP — Trusted Device System**: Login sends deviceToken (localStorage UUID) + deviceName (UA-derived). If user has trusted devices and this token isn't one → HIGH `UNKNOWN_DEVICE_LOGIN` alert fires in Firewall + user sees a "New Device Detected" interstitial. Settings page manages registered devices (add/remove). Schema: `trusted_devices` table.
 
 ## User preferences
 

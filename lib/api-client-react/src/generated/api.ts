@@ -33,6 +33,7 @@ import type {
   ErrorResponse,
   FirewallResponse,
   GetTransactionHistoryParams,
+  GetTrustedDevices200,
   HealthStatus,
   LoginBody,
   MessageResponse,
@@ -42,6 +43,7 @@ import type {
   TransactionResponse,
   TransactionSummary,
   TransferBody,
+  TrustDeviceBody,
   UpdatePinBody,
   UserProfile,
   WithdrawBody,
@@ -544,6 +546,251 @@ export function useGetMyProfile<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary List all trusted devices for the current user
+ */
+export const getGetTrustedDevicesUrl = () => {
+  return `/api/users/trusted-devices`;
+};
+
+export const getTrustedDevices = async (
+  options?: RequestInit,
+): Promise<GetTrustedDevices200> => {
+  return customFetch<GetTrustedDevices200>(getGetTrustedDevicesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTrustedDevicesQueryKey = () => {
+  return [`/api/users/trusted-devices`] as const;
+};
+
+export const getGetTrustedDevicesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTrustedDevices>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTrustedDevices>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTrustedDevicesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTrustedDevices>>
+  > = ({ signal }) => getTrustedDevices({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTrustedDevices>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTrustedDevicesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTrustedDevices>>
+>;
+export type GetTrustedDevicesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all trusted devices for the current user
+ */
+
+export function useGetTrustedDevices<
+  TData = Awaited<ReturnType<typeof getTrustedDevices>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTrustedDevices>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTrustedDevicesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Register a new trusted device
+ */
+export const getAddTrustedDeviceUrl = () => {
+  return `/api/users/trusted-devices`;
+};
+
+export const addTrustedDevice = async (
+  trustDeviceBody: TrustDeviceBody,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getAddTrustedDeviceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(trustDeviceBody),
+  });
+};
+
+export const getAddTrustedDeviceMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addTrustedDevice>>,
+    TError,
+    { data: BodyType<TrustDeviceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addTrustedDevice>>,
+  TError,
+  { data: BodyType<TrustDeviceBody> },
+  TContext
+> => {
+  const mutationKey = ["addTrustedDevice"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addTrustedDevice>>,
+    { data: BodyType<TrustDeviceBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return addTrustedDevice(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddTrustedDeviceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addTrustedDevice>>
+>;
+export type AddTrustedDeviceMutationBody = BodyType<TrustDeviceBody>;
+export type AddTrustedDeviceMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Register a new trusted device
+ */
+export const useAddTrustedDevice = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addTrustedDevice>>,
+    TError,
+    { data: BodyType<TrustDeviceBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addTrustedDevice>>,
+  TError,
+  { data: BodyType<TrustDeviceBody> },
+  TContext
+> => {
+  return useMutation(getAddTrustedDeviceMutationOptions(options));
+};
+
+/**
+ * @summary Remove a trusted device
+ */
+export const getRemoveTrustedDeviceUrl = (token: string) => {
+  return `/api/users/trusted-devices/${token}`;
+};
+
+export const removeTrustedDevice = async (
+  token: string,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getRemoveTrustedDeviceUrl(token), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRemoveTrustedDeviceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeTrustedDevice>>,
+    TError,
+    { token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof removeTrustedDevice>>,
+  TError,
+  { token: string },
+  TContext
+> => {
+  const mutationKey = ["removeTrustedDevice"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof removeTrustedDevice>>,
+    { token: string }
+  > = (props) => {
+    const { token } = props ?? {};
+
+    return removeTrustedDevice(token, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveTrustedDeviceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof removeTrustedDevice>>
+>;
+
+export type RemoveTrustedDeviceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove a trusted device
+ */
+export const useRemoveTrustedDevice = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof removeTrustedDevice>>,
+    TError,
+    { token: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof removeTrustedDevice>>,
+  TError,
+  { token: string },
+  TContext
+> => {
+  return useMutation(getRemoveTrustedDeviceMutationOptions(options));
+};
 
 /**
  * @summary Set or update the emergency duress PIN
