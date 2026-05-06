@@ -1,0 +1,29 @@
+Project Breakdown The Secure Online Transaction System with Cryptography is a banking application developed using Java, JSP, and MySQL
+. The system is divided into two primary entities:
+User Module: Users can register for an account, log in, update their PIN, deposit, withdraw, and transfer money, view transaction history, and raise complaints
+.
+Admin Module: The administrator is responsible for activating or rejecting new user registrations, viewing active and rejected users, and monitoring all global transactions and compliance issues (complaints)
+.
+How it Works The project simulates a real-world banking workflow and ATM operations:
+Registration & Activation: When a user registers, they must provide personal details, KYC information (such as photos in KB sizes, PAN card, and Aadhaar card numbers), and address details
+. After submitting the form, the user cannot log in immediately
+. Their account remains in a "waiting" state until an administrator logs in, reviews the application, and explicitly activates the account
+.
+User Interface: Once activated, the user dashboard displays a virtual ATM card that shows their account number, name, balance, and an expiry date
+.
+Banking Operations: Users can perform deposits, withdrawals, and transfers to other users
+. The system features data validation during transfers, ensuring that a user cannot transfer money to their own account or to an invalid account number
+. When a valid recipient account number is entered, the system auto-populates the recipient's name to verify the transaction
+.
+Admin Oversight: The admin dashboard aggregates all user activity, allowing the administrator to filter transactions by type and view any complaints (up to 250 characters) submitted by users
+.
+How it is Secured The application secures the user experience on two levels:
+PIN Validation: Every financial action, including deposits, withdrawals, and transfers, requires the user to input their correct PIN
+. If an incorrect PIN is provided, the transaction is immediately blocked
+.
+Cryptography: The core security of the application relies on the AES (Advanced Encryption Standard) algorithm
+.
+What's Unique About It The most unique aspect of this final-year project is how it secures the backend database using AES cryptography
+. While many basic projects store transaction logs in plain text, this system completely encrypts the transaction records inside the MySQL database
+. If an unauthorized person accesses the database directly, sensitive information—such as the sending and receiving account numbers, transaction types, times, names, and transaction statuses—will appear fully encrypted and unreadable
+.

@@ -1,45 +1,67 @@
-# [Project name]
+# SecureBank
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A full-stack secure online banking web app with AES-256-GCM encrypted transactions, user KYC onboarding, ATM card dashboard, and admin oversight panel.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — starts Python crypto service + builds + runs API (port 8080)
+- `pnpm --filter @workspace/secure-banking run dev` — runs Vite frontend (port assigned by workflow)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` (Postgres), `SESSION_SECRET` (express-session)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- Frontend: React 19 + Vite 7, Wouter routing, TanStack Query v5, Tailwind CSS v4, animejs v4, shadcn/ui
+- API: Express 5, express-session (cookie-based auth)
+- Crypto: Python Flask service (AES-256-GCM via `cryptography` lib) on port 5001 — encrypts/decrypts transaction records at rest
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
+- API codegen: Orval (from OpenAPI spec → React Query hooks + Zod schemas)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — source of truth for all API contracts (30+ endpoints)
+- `lib/db/src/schema/` — Drizzle schema: users, transactions, complaints, admins tables
+- `artifacts/api-server/src/routes/` — Express route handlers (auth, users, transactions, complaints, admin)
+- `artifacts/api-server/crypto/aes_service.py` — Python AES-256-GCM Flask service
+- `artifacts/api-server/src/lib/crypto.ts` — Node.js HTTP client calling the Python service
+- `artifacts/secure-banking/src/pages/` — all frontend pages (Home, Login, Register, Dashboard, Deposit, Withdraw, Transfer, History, Complaints, Settings, Admin*)
+- `lib/api-client-react/src/generated/` — auto-generated React Query hooks + Zod schemas
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Python for crypto**: AES-256-GCM encryption is handled by a separate Python Flask microservice (port 5001) called over localhost HTTP. This keeps the crypto isolated and uses the battle-tested `cryptography` library.
+- **Cookie-based sessions**: express-session with `sameSite: lax` in dev, `none` in prod. Frontend uses `credentials: "include"` on all fetch calls.
+- **Contract-first API**: OpenAPI spec written first, then Orval generates typed React Query hooks. Frontend never writes raw fetch calls.
+- **Encrypted transaction records**: Every transaction amount/description is encrypted before DB storage and decrypted on read via the Python service.
+- **animejs v4 named exports**: Uses `import { animate, stagger } from "animejs"` — v4 removed the default export.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **User flow**: Register with KYC → admin approves → login with account number + PIN → ATM card dashboard → deposit/withdraw/transfer → transaction history → complaints
+- **Admin flow**: Login → view pending users → activate/reject accounts → monitor all transactions and complaints with system stats
+- **Seeded data**: admin (`admin`/`admin123`), Alice (`SB2024000001`/PIN:`1234`), Bob (`SB2024000002`/PIN:`5678`), Charlie (pending)
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Python for cybersecurity / crypto builds
+- White background with doodle/sketch theme (cross-hatch pattern)
+- animejs for visual enhancements and entrance animations
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- API server dev script starts Python service in background THEN builds + starts Node: `python3 crypto/aes_service.py & pnpm run build && pnpm run start`
+- `setBaseUrl("")` in `main.tsx` — generated API paths already include `/api` prefix from OpenAPI `servers: [{url: /api}]`
+- animejs v4: use `animate(target, opts)` and `stagger(n)` named imports — no default export
+- `.doodle-bg` CSS class adds background-image pattern only (no `position: absolute`)
+- After any route/schema change, restart the API Server workflow to rebuild
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See `pnpm-workspace` skill for workspace structure and TypeScript setup
+- See `lib/api-spec/openapi.yaml` for all endpoint definitions
