@@ -140,6 +140,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /users/duress-pin:
+    put:
+      operationId: setDuressPin
+      tags: [users]
+      summary: Set or update the emergency duress PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetDuressPinBody"
+      responses:
+        "200":
+          description: Duress PIN set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid current PIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /users/pin:
     put:
       operationId: updatePin
@@ -589,6 +614,10 @@ components:
           type: string
         createdAt:
           type: string
+        duressMode:
+          type: boolean
+        hasDuressPin:
+          type: boolean
       required: [id, accountNumber, firstName, lastName, email, phone, balance, status, address, city, state, createdAt]
 
     AccountLookup:
@@ -610,6 +639,17 @@ components:
           minLength: 4
           maxLength: 6
       required: [currentPin, newPin]
+
+    SetDuressPinBody:
+      type: object
+      properties:
+        currentPin:
+          type: string
+        duressPin:
+          type: string
+          minLength: 4
+          maxLength: 6
+      required: [currentPin, duressPin]
 
     DepositBody:
       type: object

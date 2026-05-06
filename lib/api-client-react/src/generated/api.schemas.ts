@@ -74,6 +74,8 @@ export interface UserProfile {
   city: string;
   state: string;
   createdAt: string;
+  duressMode?: boolean;
+  hasDuressPin?: boolean;
 }
 
 export interface AuthResponse {
@@ -94,6 +96,15 @@ export interface UpdatePinBody {
    * @maxLength 6
    */
   newPin: string;
+}
+
+export interface SetDuressPinBody {
+  currentPin: string;
+  /**
+   * @minLength 4
+   * @maxLength 6
+   */
+  duressPin: string;
 }
 
 export interface DepositBody {

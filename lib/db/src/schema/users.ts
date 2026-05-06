@@ -10,6 +10,7 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   phone: varchar("phone", { length: 20 }).notNull(),
   pinHash: text("pin_hash").notNull(),
+  duressPinHash: text("duress_pin_hash"),
   balance: numeric("balance", { precision: 15, scale: 2 }).notNull().default("0.00"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   panCard: text("pan_card").notNull(),

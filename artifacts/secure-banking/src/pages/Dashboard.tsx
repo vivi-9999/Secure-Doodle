@@ -38,6 +38,12 @@ export default function Dashboard({ user }: { user: any }) {
   return (
     <UserLayout>
       <div className="space-y-6">
+        {user.duressMode && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-amber-300 bg-amber-50 text-amber-800 text-sm font-medium animate-in fade-in duration-300">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse inline-block shrink-0" />
+            <span><strong>Protected Mode Active</strong> — This is a secured decoy view. Your real account data is hidden.</span>
+          </div>
+        )}
         <h1 className="text-3xl font-bold tracking-tight dash-stagger opacity-0">Welcome back, {user.firstName}</h1>
         
         <div className="grid md:grid-cols-2 gap-6">

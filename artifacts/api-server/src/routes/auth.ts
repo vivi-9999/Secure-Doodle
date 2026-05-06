@@ -5,6 +5,7 @@ import { RegisterBody, LoginBody, AdminLoginBody } from "@workspace/api-zod";
 import { hashPin, verifyPin } from "../lib/pinHash";
 import { generateAccountNumber } from "../lib/accountNumber";
 import { createHash } from "crypto";
+import { recordDuressLogin } from "../lib/duressEvents";
 
 const router = Router();
 
@@ -83,13 +84,28 @@ router.post("/login", async (req, res) => {
     res.status(401).json({ error: user.status === "pending" ? "Account pending activation" : "Account rejected" });
     return;
   }
-  if (!verifyPin(pin, user.pinHash)) {
+
+  const isNormalPin = verifyPin(pin, user.pinHash);
+  const isDuressPin = !!(user.duressPinHash && verifyPin(pin, user.duressPinHash));
+
+  if (!isNormalPin && !isDuressPin) {
     res.status(401).json({ error: "Invalid account number or PIN" });
     return;
   }
 
+  if (isDuressPin) {
+    recordDuressLogin({
+      userId: user.id,
+      accountNumber: user.accountNumber,
+      userName: `${user.firstName} ${user.lastName}`,
+      timestamp: new Date(),
+      ip: (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "unknown",
+    });
+  }
+
   (req.session as any).userId = user.id;
   (req.session as any).role = "user";
+  (req.session as any).duressMode = isDuressPin;
 
   res.json({
     message: "Login successful",

@@ -37,6 +37,7 @@ import type {
   LoginBody,
   MessageResponse,
   RegisterBody,
+  SetDuressPinBody,
   TransactionHistoryResponse,
   TransactionResponse,
   TransactionSummary,
@@ -543,6 +544,92 @@ export function useGetMyProfile<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Set or update the emergency duress PIN
+ */
+export const getSetDuressPinUrl = () => {
+  return `/api/users/duress-pin`;
+};
+
+export const setDuressPin = async (
+  setDuressPinBody: SetDuressPinBody,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getSetDuressPinUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setDuressPinBody),
+  });
+};
+
+export const getSetDuressPinMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setDuressPin>>,
+    TError,
+    { data: BodyType<SetDuressPinBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setDuressPin>>,
+  TError,
+  { data: BodyType<SetDuressPinBody> },
+  TContext
+> => {
+  const mutationKey = ["setDuressPin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setDuressPin>>,
+    { data: BodyType<SetDuressPinBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setDuressPin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetDuressPinMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setDuressPin>>
+>;
+export type SetDuressPinMutationBody = BodyType<SetDuressPinBody>;
+export type SetDuressPinMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Set or update the emergency duress PIN
+ */
+export const useSetDuressPin = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setDuressPin>>,
+    TError,
+    { data: BodyType<SetDuressPinBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setDuressPin>>,
+  TError,
+  { data: BodyType<SetDuressPinBody> },
+  TContext
+> => {
+  return useMutation(getSetDuressPinMutationOptions(options));
+};
 
 /**
  * @summary Update PIN

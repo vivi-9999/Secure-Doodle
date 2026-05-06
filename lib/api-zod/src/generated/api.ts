@@ -57,6 +57,8 @@ export const LoginResponse = zod.object({
       city: zod.string(),
       state: zod.string(),
       createdAt: zod.string(),
+      duressMode: zod.boolean().optional(),
+      hasDuressPin: zod.boolean().optional(),
     })
     .optional(),
   role: zod.enum(["user", "admin"]).optional(),
@@ -86,6 +88,8 @@ export const AdminLoginResponse = zod.object({
       city: zod.string(),
       state: zod.string(),
       createdAt: zod.string(),
+      duressMode: zod.boolean().optional(),
+      hasDuressPin: zod.boolean().optional(),
     })
     .optional(),
   role: zod.enum(["user", "admin"]).optional(),
@@ -114,6 +118,26 @@ export const GetMyProfileResponse = zod.object({
   city: zod.string(),
   state: zod.string(),
   createdAt: zod.string(),
+  duressMode: zod.boolean().optional(),
+  hasDuressPin: zod.boolean().optional(),
+});
+
+/**
+ * @summary Set or update the emergency duress PIN
+ */
+export const setDuressPinBodyDuressPinMin = 4;
+export const setDuressPinBodyDuressPinMax = 6;
+
+export const SetDuressPinBody = zod.object({
+  currentPin: zod.string(),
+  duressPin: zod
+    .string()
+    .min(setDuressPinBodyDuressPinMin)
+    .max(setDuressPinBodyDuressPinMax),
+});
+
+export const SetDuressPinResponse = zod.object({
+  message: zod.string(),
 });
 
 /**

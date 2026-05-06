@@ -4,6 +4,7 @@ import { db, usersTable, transactionsTable, complaintsTable } from "@workspace/d
 import { AdminGetUsersQueryParams, AdminGetTransactionsQueryParams, AdminActivateUserParams, AdminRejectUserParams, AdminGetFirewallEventsQueryParams } from "@workspace/api-zod";
 import { decryptTransactionData } from "../lib/crypto";
 import { desc } from "drizzle-orm";
+import { getDuressEvents } from "../lib/duressEvents";
 
 const router = Router();
 
@@ -234,17 +235,38 @@ router.get("/firewall", requireAdmin, async (req, res) => {
     };
   }));
 
-  // Filter by severity if requested
-  const filtered = severityFilter ? events.filter(e => e.severity === severityFilter) : events;
+  // Inject duress login events as CRITICAL synthetic events
+  const duressEvts = getDuressEvents().map((de, i) => ({
+    id: -(i + 1),
+    eventId: `DURESS-${String(i + 1).padStart(4, "0")}`,
+    timestamp: de.timestamp.toISOString(),
+    severity: "critical" as const,
+    riskScore: 100,
+    type: "transfer" as const,
+    amount: 0,
+    fromAccount: de.accountNumber,
+    toAccount: null,
+    fromName: de.userName,
+    toName: null,
+    status: "success",
+    riskFlags: ["DURESS_ACCESS_DETECTED", "EMERGENCY_PIN_USED", "POSSIBLE_COERCION"],
+    description: `⚠️ DURESS ACCESS — ${de.userName} logged in using Emergency PIN from IP ${de.ip}`,
+  }));
+
+  const allEvents = [...duressEvts, ...events].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+
+  const filtered = severityFilter ? allEvents.filter(e => e.severity === severityFilter) : allEvents;
   const paginated = filtered.slice(0, limit);
 
   const stats = {
-    total: events.length,
-    critical: events.filter(e => e.severity === "critical").length,
-    high: events.filter(e => e.severity === "high").length,
-    medium: events.filter(e => e.severity === "medium").length,
-    low: events.filter(e => e.severity === "low").length,
-    info: events.filter(e => e.severity === "info").length,
+    total: allEvents.length,
+    critical: allEvents.filter(e => e.severity === "critical").length,
+    high: allEvents.filter(e => e.severity === "high").length,
+    medium: allEvents.filter(e => e.severity === "medium").length,
+    low: allEvents.filter(e => e.severity === "low").length,
+    info: allEvents.filter(e => e.severity === "info").length,
   };
 
   res.json({ events: paginated, stats });

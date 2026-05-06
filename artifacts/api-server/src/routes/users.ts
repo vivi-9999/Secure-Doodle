@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
-import { UpdatePinBody } from "@workspace/api-zod";
+import { UpdatePinBody, SetDuressPinBody } from "@workspace/api-zod";
 import { hashPin, verifyPin } from "../lib/pinHash";
 
 const router = Router();
@@ -21,6 +21,9 @@ router.get("/me", requireAuth, async (req: any, res) => {
     res.status(404).json({ error: "User not found" });
     return;
   }
+
+  const duressMode = req.session.duressMode === true;
+
   res.json({
     id: user.id,
     accountNumber: user.accountNumber,
@@ -28,13 +31,42 @@ router.get("/me", requireAuth, async (req: any, res) => {
     lastName: user.lastName,
     email: user.email,
     phone: user.phone,
-    balance: parseFloat(user.balance),
+    balance: duressMode ? 500 : parseFloat(user.balance),
     status: user.status,
     address: user.address,
     city: user.city,
     state: user.state,
     createdAt: user.createdAt.toISOString(),
+    duressMode,
+    hasDuressPin: !!user.duressPinHash,
   });
+});
+
+router.put("/duress-pin", requireAuth, async (req: any, res) => {
+  const parsed = SetDuressPinBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed" });
+    return;
+  }
+  const { currentPin, duressPin } = parsed.data;
+
+  const users = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId));
+  const user = users[0];
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (!verifyPin(currentPin, user.pinHash)) {
+    res.status(400).json({ error: "Current PIN is incorrect" });
+    return;
+  }
+  if (duressPin === currentPin) {
+    res.status(400).json({ error: "Emergency PIN must be different from your main PIN" });
+    return;
+  }
+
+  await db.update(usersTable).set({ duressPinHash: hashPin(duressPin) }).where(eq(usersTable.id, user.id));
+  res.json({ message: "Emergency PIN set successfully" });
 });
 
 router.put("/pin", requireAuth, async (req: any, res) => {

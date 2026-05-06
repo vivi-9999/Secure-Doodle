@@ -36,6 +36,11 @@ async function formatTransaction(tx: any): Promise<any> {
 }
 
 router.post("/deposit", requireAuth, async (req: any, res) => {
+  if (req.session.duressMode) {
+    const { amount } = req.body;
+    res.json({ message: "Deposit successful", transaction: { id: 0, type: "deposit", amount: Number(amount) || 0, status: "success", createdAt: new Date().toISOString() }, newBalance: 500 + (Number(amount) || 0) });
+    return;
+  }
   const parsed = DepositBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation failed" });
@@ -80,6 +85,12 @@ router.post("/deposit", requireAuth, async (req: any, res) => {
 });
 
 router.post("/withdraw", requireAuth, async (req: any, res) => {
+  if (req.session.duressMode) {
+    const { amount } = req.body;
+    if ((Number(amount) || 0) > 500) { res.status(400).json({ error: "Insufficient funds" }); return; }
+    res.json({ message: "Withdrawal successful", transaction: { id: 0, type: "withdrawal", amount: Number(amount) || 0, status: "success", createdAt: new Date().toISOString() }, newBalance: 500 - (Number(amount) || 0) });
+    return;
+  }
   const parsed = WithdrawBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation failed" });
@@ -128,6 +139,12 @@ router.post("/withdraw", requireAuth, async (req: any, res) => {
 });
 
 router.post("/transfer", requireAuth, async (req: any, res) => {
+  if (req.session.duressMode) {
+    const { amount, toAccountNumber } = req.body;
+    if ((Number(amount) || 0) > 500) { res.status(400).json({ error: "Insufficient funds" }); return; }
+    res.json({ message: `Transfer of ₹${amount} successful`, transaction: { id: 0, type: "transfer", amount: Number(amount) || 0, toAccountNumber, status: "success", createdAt: new Date().toISOString() }, newBalance: 500 - (Number(amount) || 0) });
+    return;
+  }
   const parsed = TransferBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Validation failed" });
@@ -198,6 +215,10 @@ router.post("/transfer", requireAuth, async (req: any, res) => {
 });
 
 router.get("/history", requireAuth, async (req: any, res) => {
+  if (req.session.duressMode) {
+    res.json({ transactions: [], total: 0 });
+    return;
+  }
   const parsed = GetTransactionHistoryQueryParams.safeParse(req.query);
   const limit = parsed.success ? (parsed.data.limit ?? 20) : 20;
   const offset = parsed.success ? (parsed.data.offset ?? 0) : 0;
@@ -216,6 +237,10 @@ router.get("/history", requireAuth, async (req: any, res) => {
 });
 
 router.get("/summary", requireAuth, async (req: any, res) => {
+  if (req.session.duressMode) {
+    res.json({ totalDeposits: 0, totalWithdrawals: 0, totalTransfersSent: 0, totalTransfersReceived: 0, transactionCount: 0, currentBalance: 500 });
+    return;
+  }
   const userId = req.session.userId;
 
   const users = await db.select().from(usersTable).where(eq(usersTable.id, userId));
