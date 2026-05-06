@@ -1,9 +1,9 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { useAdminGetStats } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, Clock, CheckCircle, XCircle, ArrowRightLeft, ArrowDownToLine, ArrowUpFromLine, MessageSquare } from "lucide-react";
 import { animate, stagger } from "animejs";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useAdminGetStats();

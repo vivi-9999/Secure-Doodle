@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useLogout, useGetMyProfile } from "@workspace/api-client-react";
+import { useLogout } from "@workspace/api-client-react";
 import { LogOut, Home, ArrowDownToLine, ArrowUpFromLine, Send, History, MessageSquare, Settings, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

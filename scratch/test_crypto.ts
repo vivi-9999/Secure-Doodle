@@ -1,9 +1,9 @@
 import crypto from "crypto";
 
-const RAW_SECRET = process.env.AES_SECRET ?? "securebank-aes-master-key-change-in-prod";
+const RAW_SECRET = "securebank-aes-master-key-change-in-prod";
 const AES_KEY = crypto.createHash("sha256").update(RAW_SECRET).digest();
 
-export async function encryptTransactionData(data: Record<string, unknown>): Promise<string> {
+export function encrypt(data: Record<string, unknown>): string {
   const plaintext = Buffer.from(JSON.stringify(data), "utf-8");
   const nonce = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv("aes-256-gcm", AES_KEY, nonce);
@@ -13,7 +13,7 @@ export async function encryptTransactionData(data: Record<string, unknown>): Pro
   return combined.toString("base64");
 }
 
-export async function decryptTransactionData(encoded: string): Promise<Record<string, unknown>> {
+export function decrypt(encoded: string): Record<string, unknown> {
   const combined = Buffer.from(encoded, "base64");
   const nonce = combined.subarray(0, 12);
   const ciphertext = combined.subarray(12, combined.length - 16);
@@ -23,3 +23,9 @@ export async function decryptTransactionData(encoded: string): Promise<Record<st
   const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
   return JSON.parse(plaintext.toString("utf-8"));
 }
+
+const original = { test: "data" };
+const enc = encrypt(original);
+const dec = decrypt(enc);
+console.log("Encrypted:", enc);
+console.log("Decrypted:", dec);

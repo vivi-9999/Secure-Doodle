@@ -27,7 +27,7 @@ export default function AdminFirewall() {
   const [severity, setSeverity] = useState<AdminGetFirewallEventsSeverity | "all">("all");
   const didAnimate = useRef(false);
 
-  const { data, isLoading, refetch } = useAdminGetFirewallEvents(
+  const { data, isLoading } = useAdminGetFirewallEvents(
     severity === "all" ? { limit: 100 } : { severity, limit: 100 },
     { query: { refetchInterval: 15000 } as any }
   );
