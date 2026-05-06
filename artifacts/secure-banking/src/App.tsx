@@ -15,6 +15,7 @@ import Transfer from "./pages/Transfer";
 import History from "./pages/History";
 import Complaints from "./pages/Complaints";
 import Settings from "./pages/Settings";
+import Analytics from "./pages/Analytics";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -73,6 +74,9 @@ function Router() {
       </Route>
       <Route path="/settings">
         {() => <ProtectedRoute component={Settings} />}
+      </Route>
+      <Route path="/analytics">
+        {() => <ProtectedRoute component={Analytics} />}
       </Route>
 
       <Route path="/admin/login" component={AdminLogin} />

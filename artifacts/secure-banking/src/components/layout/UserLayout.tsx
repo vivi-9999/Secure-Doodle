@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useLogout, useGetMyProfile } from "@workspace/api-client-react";
-import { LogOut, Home, ArrowDownToLine, ArrowUpFromLine, Send, History, MessageSquare, Settings } from "lucide-react";
+import { LogOut, Home, ArrowDownToLine, ArrowUpFromLine, Send, History, MessageSquare, Settings, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function UserLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,7 @@ export function UserLayout({ children }: { children: React.ReactNode }) {
     { href: "/withdraw", label: "Withdraw", icon: ArrowUpFromLine },
     { href: "/transfer", label: "Transfer", icon: Send },
     { href: "/history", label: "History", icon: History },
+    { href: "/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/complaints", label: "Complaints", icon: MessageSquare },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
