@@ -24,6 +24,9 @@ RUN pnpm install
 # Copy all source files
 COPY . .
 
+# Set environment to production
+ENV NODE_ENV="production"
+
 # Build all packages
 RUN pnpm run build
 
