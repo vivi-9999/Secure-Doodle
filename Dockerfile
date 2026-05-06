@@ -9,6 +9,8 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY lib/api-zod/package.json ./lib/api-zod/
 COPY lib/db/package.json ./lib/db/
+COPY lib/api-client-react/package.json ./lib/api-client-react/
+COPY lib/api-spec/package.json ./lib/api-spec/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/secure-banking/package.json ./artifacts/secure-banking/
 
