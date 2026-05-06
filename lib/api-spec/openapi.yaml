@@ -201,6 +201,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+  /users/lock-settings:
+    put:
+      operationId: setLockSettings
+      tags: [users]
+      summary: Set the transfer time-lock threshold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetLockSettingsBody"
+      responses:
+        "200":
+          description: Lock settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid PIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /transactions/{id}/cancel-lock:
+    delete:
+      operationId: cancelLockedTransfer
+      tags: [transactions]
+      summary: Cancel a pending time-locked transfer and restore balance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transfer cancelled and balance restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Transaction not found or not cancellable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /users/duress-pin:
     put:
       operationId: setDuressPin
@@ -709,6 +759,8 @@ components:
           type: boolean
         hasDuressPin:
           type: boolean
+        lockThreshold:
+          type: number
       required: [id, accountNumber, firstName, lastName, email, phone, balance, status, address, city, state, createdAt]
 
     AccountLookup:
@@ -798,10 +850,23 @@ components:
           nullable: true
         status:
           type: string
-          enum: [success, failed]
+          enum: [success, failed, pending_locked]
+        lockExpiresAt:
+          type: string
+          nullable: true
         createdAt:
           type: string
       required: [id, type, amount, status, createdAt]
+
+    SetLockSettingsBody:
+      type: object
+      properties:
+        currentPin:
+          type: string
+        lockThreshold:
+          type: number
+          minimum: 0
+      required: [currentPin, lockThreshold]
 
     TransactionResponse:
       type: object

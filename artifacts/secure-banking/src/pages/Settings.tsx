@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { UserLayout } from "@/components/layout/UserLayout";
-import { useUpdatePin, useSetDuressPin, useGetTrustedDevices, useAddTrustedDevice, useRemoveTrustedDevice } from "@workspace/api-client-react";
+import { useUpdatePin, useSetDuressPin, useGetTrustedDevices, useAddTrustedDevice, useRemoveTrustedDevice, useSetLockSettings } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Key, ShieldAlert, CheckCircle, Monitor, Trash2, Loader2, Laptop } from "lucide-react";
+import { Key, ShieldAlert, CheckCircle, Monitor, Trash2, Loader2, Laptop, Timer } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 function getOrCreateDeviceToken(): string {
@@ -34,6 +34,7 @@ export default function Settings({ user }: { user: any }) {
   const queryClient = useQueryClient();
   const updatePinMutation = useUpdatePin();
   const setDuressPinMutation = useSetDuressPin();
+  const setLockSettingsMutation = useSetLockSettings();
   const addTrustedDeviceMutation = useAddTrustedDevice();
   const removeTrustedDeviceMutation = useRemoveTrustedDevice();
   const { data: trustedDevicesData, isLoading: loadingDevices } = useGetTrustedDevices();
@@ -44,6 +45,8 @@ export default function Settings({ user }: { user: any }) {
   const [duressPin, setDuressPin] = useState("");
   const [trustPin, setTrustPin] = useState("");
   const [showTrustForm, setShowTrustForm] = useState(false);
+  const [lockPin, setLockPin] = useState("");
+  const [lockAmount, setLockAmount] = useState(user?.lockThreshold?.toString() ?? "");
 
   const deviceToken = getOrCreateDeviceToken();
   const deviceName = getDeviceName();
@@ -213,6 +216,65 @@ export default function Settings({ user }: { user: any }) {
                 </div>
               </form>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Transaction Time-Lock */}
+        <Card className="border-2 border-blue-200 shadow-sm bg-blue-50/20">
+          <CardHeader className="space-y-1">
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2">
+              <Timer className="w-6 h-6" />
+            </div>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-xl">Transfer Time-Lock</CardTitle>
+              {user?.lockThreshold && (
+                <span className="text-xs font-medium text-blue-700 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full">
+                  Active &gt; ₹{Number(user.lockThreshold).toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+            <CardDescription className="leading-relaxed">
+              Any transfer above your set threshold is <strong>held for 5 minutes</strong> before executing. You can cancel it during that window — a powerful safeguard against compromised sessions or accidental transfers. Set threshold to 0 to disable.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const threshold = parseFloat(lockAmount) || 0;
+              setLockSettingsMutation.mutate({ data: { currentPin: lockPin, lockThreshold: threshold } }, {
+                onSuccess: (data: any) => {
+                  toast({ title: threshold === 0 ? "Time-lock disabled" : "Time-lock activated", description: data.message });
+                  setLockPin("");
+                },
+                onError: (err: any) => {
+                  toast({ title: "Failed", description: err.data?.error || "Unknown error", variant: "destructive" });
+                }
+              });
+            }} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Lock transfers above (₹) — set 0 to disable</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={lockAmount}
+                  onChange={(e) => setLockAmount(e.target.value)}
+                  placeholder="e.g. 5000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Your PIN to confirm</Label>
+                <Input type="password" value={lockPin} onChange={(e) => setLockPin(e.target.value)} placeholder="••••" maxLength={6} required />
+              </div>
+              <div className="p-3 bg-blue-100/60 border border-blue-200 rounded-lg text-xs text-blue-800 space-y-1">
+                <p className="font-semibold">How it works:</p>
+                <p>→ Transfers above threshold are held with a 5-minute countdown</p>
+                <p>→ You can cancel the transfer during this window from Transaction History</p>
+                <p>→ After 5 minutes the transfer executes automatically</p>
+              </div>
+              <Button type="submit" variant="outline" className="w-full border-blue-300 text-blue-800 hover:bg-blue-100" disabled={setLockSettingsMutation.isPending}>
+                {setLockSettingsMutation.isPending ? "Saving..." : user?.lockThreshold ? "Update Time-Lock" : "Enable Time-Lock"}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 

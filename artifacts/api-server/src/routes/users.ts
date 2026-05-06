@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db, usersTable, trustedDevicesTable } from "@workspace/db";
-import { UpdatePinBody, SetDuressPinBody, AddTrustedDeviceBody } from "@workspace/api-zod";
+import { UpdatePinBody, SetDuressPinBody, AddTrustedDeviceBody, SetLockSettingsBody } from "@workspace/api-zod";
 import { hashPin, verifyPin } from "../lib/pinHash";
 import { randomUUID } from "crypto";
 
@@ -40,7 +40,27 @@ router.get("/me", requireAuth, async (req: any, res) => {
     createdAt: user.createdAt.toISOString(),
     duressMode,
     hasDuressPin: !!user.duressPinHash,
+    lockThreshold: user.lockThreshold ? parseFloat(user.lockThreshold) : null,
   });
+});
+
+router.put("/lock-settings", requireAuth, async (req: any, res) => {
+  const parsed = SetLockSettingsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed" });
+    return;
+  }
+  const { currentPin, lockThreshold } = parsed.data;
+  const users = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId));
+  const user = users[0];
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  if (!verifyPin(currentPin, user.pinHash)) {
+    res.status(400).json({ error: "Current PIN is incorrect" });
+    return;
+  }
+  const threshold = lockThreshold === 0 ? null : lockThreshold.toFixed(2);
+  await db.update(usersTable).set({ lockThreshold: threshold }).where(eq(usersTable.id, user.id));
+  res.json({ message: lockThreshold === 0 ? "Time-lock disabled" : `Time-lock set: transfers above ₹${lockThreshold.toLocaleString('en-IN')} will be held for 5 minutes` });
 });
 
 router.get("/trusted-devices", requireAuth, async (req: any, res) => {

@@ -1,7 +1,8 @@
 import { UserLayout } from "@/components/layout/UserLayout";
 import { useGetTransactionSummary, useGetTransactionHistory } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IndianRupee, ArrowDownToLine, ArrowUpFromLine, ArrowRightLeft, CreditCard } from "lucide-react";
+import { IndianRupee, ArrowDownToLine, ArrowUpFromLine, ArrowRightLeft, CreditCard, Timer } from "lucide-react";
+import { Link } from "wouter";
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import { format } from "date-fns";
@@ -44,6 +45,22 @@ export default function Dashboard({ user }: { user: any }) {
             <span><strong>Protected Mode Active</strong> — This is a secured decoy view. Your real account data is hidden.</span>
           </div>
         )}
+        {(() => {
+          const lockedTxs = history?.transactions?.filter((tx: any) => tx.status === "pending_locked") ?? [];
+          if (lockedTxs.length === 0) return null;
+          return (
+            <Link href="/history">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-blue-300 bg-blue-50 text-blue-800 text-sm font-medium animate-in fade-in duration-300 cursor-pointer hover:bg-blue-100 transition-colors">
+                <Timer className="w-5 h-5 text-blue-500 shrink-0 animate-pulse" />
+                <span>
+                  <strong>{lockedTxs.length} time-locked transfer{lockedTxs.length > 1 ? "s" : ""} pending</strong>
+                  {" — "}money is reserved but not yet sent. You can cancel within the window.
+                </span>
+                <span className="ml-auto text-xs font-semibold underline shrink-0">View →</span>
+              </div>
+            </Link>
+          );
+        })()}
         <h1 className="text-3xl font-bold tracking-tight dash-stagger opacity-0">Welcome back, {user.firstName}</h1>
         
         <div className="grid md:grid-cols-2 gap-6">

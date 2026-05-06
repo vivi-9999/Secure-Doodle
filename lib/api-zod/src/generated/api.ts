@@ -61,6 +61,7 @@ export const LoginResponse = zod.object({
       createdAt: zod.string(),
       duressMode: zod.boolean().optional(),
       hasDuressPin: zod.boolean().optional(),
+      lockThreshold: zod.number().optional(),
     })
     .optional(),
   knownDevice: zod.boolean().optional(),
@@ -93,6 +94,7 @@ export const AdminLoginResponse = zod.object({
       createdAt: zod.string(),
       duressMode: zod.boolean().optional(),
       hasDuressPin: zod.boolean().optional(),
+      lockThreshold: zod.number().optional(),
     })
     .optional(),
   knownDevice: zod.boolean().optional(),
@@ -124,6 +126,7 @@ export const GetMyProfileResponse = zod.object({
   createdAt: zod.string(),
   duressMode: zod.boolean().optional(),
   hasDuressPin: zod.boolean().optional(),
+  lockThreshold: zod.number().optional(),
 });
 
 /**
@@ -161,6 +164,31 @@ export const RemoveTrustedDeviceParams = zod.object({
 });
 
 export const RemoveTrustedDeviceResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Set the transfer time-lock threshold
+ */
+export const setLockSettingsBodyLockThresholdMin = 0;
+
+export const SetLockSettingsBody = zod.object({
+  currentPin: zod.string(),
+  lockThreshold: zod.number().min(setLockSettingsBodyLockThresholdMin),
+});
+
+export const SetLockSettingsResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Cancel a pending time-locked transfer and restore balance
+ */
+export const CancelLockedTransferParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelLockedTransferResponse = zod.object({
   message: zod.string(),
 });
 
@@ -228,7 +256,8 @@ export const DepositResponse = zod.object({
     toAccountNumber: zod.string().nullish(),
     fromName: zod.string().nullish(),
     toName: zod.string().nullish(),
-    status: zod.enum(["success", "failed"]),
+    status: zod.enum(["success", "failed", "pending_locked"]),
+    lockExpiresAt: zod.string().nullish(),
     createdAt: zod.string(),
   }),
   newBalance: zod.number(),
@@ -253,7 +282,8 @@ export const WithdrawResponse = zod.object({
     toAccountNumber: zod.string().nullish(),
     fromName: zod.string().nullish(),
     toName: zod.string().nullish(),
-    status: zod.enum(["success", "failed"]),
+    status: zod.enum(["success", "failed", "pending_locked"]),
+    lockExpiresAt: zod.string().nullish(),
     createdAt: zod.string(),
   }),
   newBalance: zod.number(),
@@ -279,7 +309,8 @@ export const TransferResponse = zod.object({
     toAccountNumber: zod.string().nullish(),
     fromName: zod.string().nullish(),
     toName: zod.string().nullish(),
-    status: zod.enum(["success", "failed"]),
+    status: zod.enum(["success", "failed", "pending_locked"]),
+    lockExpiresAt: zod.string().nullish(),
     createdAt: zod.string(),
   }),
   newBalance: zod.number(),
@@ -306,7 +337,8 @@ export const GetTransactionHistoryResponse = zod.object({
       toAccountNumber: zod.string().nullish(),
       fromName: zod.string().nullish(),
       toName: zod.string().nullish(),
-      status: zod.enum(["success", "failed"]),
+      status: zod.enum(["success", "failed", "pending_locked"]),
+      lockExpiresAt: zod.string().nullish(),
       createdAt: zod.string(),
     }),
   ),
@@ -414,7 +446,8 @@ export const AdminGetTransactionsResponse = zod.object({
       toAccountNumber: zod.string().nullish(),
       fromName: zod.string().nullish(),
       toName: zod.string().nullish(),
-      status: zod.enum(["success", "failed"]),
+      status: zod.enum(["success", "failed", "pending_locked"]),
+      lockExpiresAt: zod.string().nullish(),
       createdAt: zod.string(),
     }),
   ),

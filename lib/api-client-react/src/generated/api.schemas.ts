@@ -91,6 +91,7 @@ export interface UserProfile {
   createdAt: string;
   duressMode?: boolean;
   hasDuressPin?: boolean;
+  lockThreshold?: number;
 }
 
 export interface AuthResponse {
@@ -157,6 +158,7 @@ export type TransactionStatus =
 export const TransactionStatus = {
   success: "success",
   failed: "failed",
+  pending_locked: "pending_locked",
 } as const;
 
 export interface Transaction {
@@ -168,7 +170,14 @@ export interface Transaction {
   fromName?: string | null;
   toName?: string | null;
   status: TransactionStatus;
+  lockExpiresAt?: string | null;
   createdAt: string;
+}
+
+export interface SetLockSettingsBody {
+  currentPin: string;
+  /** @minimum 0 */
+  lockThreshold: number;
 }
 
 export interface TransactionResponse {

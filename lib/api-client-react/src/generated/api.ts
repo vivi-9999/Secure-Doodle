@@ -39,6 +39,7 @@ import type {
   MessageResponse,
   RegisterBody,
   SetDuressPinBody,
+  SetLockSettingsBody,
   TransactionHistoryResponse,
   TransactionResponse,
   TransactionSummary,
@@ -790,6 +791,176 @@ export const useRemoveTrustedDevice = <
   TContext
 > => {
   return useMutation(getRemoveTrustedDeviceMutationOptions(options));
+};
+
+/**
+ * @summary Set the transfer time-lock threshold
+ */
+export const getSetLockSettingsUrl = () => {
+  return `/api/users/lock-settings`;
+};
+
+export const setLockSettings = async (
+  setLockSettingsBody: SetLockSettingsBody,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getSetLockSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setLockSettingsBody),
+  });
+};
+
+export const getSetLockSettingsMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setLockSettings>>,
+    TError,
+    { data: BodyType<SetLockSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setLockSettings>>,
+  TError,
+  { data: BodyType<SetLockSettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["setLockSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setLockSettings>>,
+    { data: BodyType<SetLockSettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setLockSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetLockSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setLockSettings>>
+>;
+export type SetLockSettingsMutationBody = BodyType<SetLockSettingsBody>;
+export type SetLockSettingsMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Set the transfer time-lock threshold
+ */
+export const useSetLockSettings = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setLockSettings>>,
+    TError,
+    { data: BodyType<SetLockSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setLockSettings>>,
+  TError,
+  { data: BodyType<SetLockSettingsBody> },
+  TContext
+> => {
+  return useMutation(getSetLockSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Cancel a pending time-locked transfer and restore balance
+ */
+export const getCancelLockedTransferUrl = (id: number) => {
+  return `/api/transactions/${id}/cancel-lock`;
+};
+
+export const cancelLockedTransfer = async (
+  id: number,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getCancelLockedTransferUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getCancelLockedTransferMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelLockedTransfer>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelLockedTransfer>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["cancelLockedTransfer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelLockedTransfer>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return cancelLockedTransfer(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelLockedTransferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelLockedTransfer>>
+>;
+
+export type CancelLockedTransferMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Cancel a pending time-locked transfer and restore balance
+ */
+export const useCancelLockedTransfer = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelLockedTransfer>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelLockedTransfer>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCancelLockedTransferMutationOptions(options));
 };
 
 /**

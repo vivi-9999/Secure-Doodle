@@ -7,6 +7,7 @@ export const transactionsTable = pgTable("transactions", {
   amount: numeric("amount", { precision: 15, scale: 2 }).notNull(),
   encryptedData: text("encrypted_data").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("success"),
+  lockExpiresAt: timestamp("lock_expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
