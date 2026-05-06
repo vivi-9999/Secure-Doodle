@@ -29,7 +29,7 @@ export default function AdminFirewall() {
 
   const { data, isLoading, refetch } = useAdminGetFirewallEvents(
     severity === "all" ? { limit: 100 } : { severity, limit: 100 },
-    { query: { refetchInterval: 15000 } }
+    { query: { refetchInterval: 15000 } as any }
   );
 
   useEffect(() => {

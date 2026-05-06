@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { db, usersTable, trustedDevicesTable } from "@workspace/db";
 import { UpdatePinBody, SetDuressPinBody, AddTrustedDeviceBody, SetLockSettingsBody } from "@workspace/api-zod";
 import { hashPin, verifyPin } from "../lib/pinHash";
-import { randomUUID } from "crypto";
+
 
 const router = Router();
 

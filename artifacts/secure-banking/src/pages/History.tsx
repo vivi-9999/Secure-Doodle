@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { UserLayout } from "@/components/layout/UserLayout";
 import { useGetTransactionHistory, useGetMyProfile, useCancelLockedTransfer } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format, formatDistanceToNowStrict } from "date-fns";
+import { format } from "date-fns";
 import { ArrowDownToLine, ArrowUpFromLine, ArrowRightLeft, Timer, X } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +78,7 @@ function LockedRow({ tx, user, onCancel }: { tx: any; user: any; onCancel: (id: 
 }
 
 export default function History() {
-  const { data: history, isLoading, refetch } = useGetTransactionHistory({ limit: 100 });
+  const { data: history, isLoading } = useGetTransactionHistory({ limit: 100 });
   const { data: user } = useGetMyProfile();
   const cancelMutation = useCancelLockedTransfer();
   const { toast } = useToast();

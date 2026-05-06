@@ -1,4 +1,4 @@
-import { db, usersTable } from "@workspace/db";
+import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 export async function generateAccountNumber(): Promise<string> {

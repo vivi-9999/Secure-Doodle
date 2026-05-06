@@ -237,13 +237,14 @@ router.post("/transfer", requireAuth, async (req: any, res) => {
       lockExpiresAt,
     }).returning();
 
-    return res.json({
+    res.json({
       message: `Transfer of ₹${amount.toLocaleString('en-IN')} to ${recipient.firstName} ${recipient.lastName} is held for 5 minutes. Cancel anytime before the timer expires.`,
       transaction: await formatTransaction(senderTx),
       newBalance: newSenderBalance,
       timeLocked: true,
       lockExpiresAt: lockExpiresAt.toISOString(),
     });
+    return;
   }
 
   // Immediate transfer

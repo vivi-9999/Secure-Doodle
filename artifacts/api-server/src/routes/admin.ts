@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, usersTable, transactionsTable, complaintsTable } from "@workspace/db";
+import { db, usersTable, transactionsTable } from "@workspace/db";
 import { AdminGetUsersQueryParams, AdminGetTransactionsQueryParams, AdminActivateUserParams, AdminRejectUserParams, AdminGetFirewallEventsQueryParams } from "@workspace/api-zod";
 import { decryptTransactionData } from "../lib/crypto";
 import { desc } from "drizzle-orm";
