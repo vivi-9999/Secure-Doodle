@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, usersTable, transactionsTable, complaintsTable } from "@workspace/db";
-import { AdminGetUsersQueryParams, AdminGetTransactionsQueryParams, AdminActivateUserParams, AdminRejectUserParams } from "@workspace/api-zod";
+import { AdminGetUsersQueryParams, AdminGetTransactionsQueryParams, AdminActivateUserParams, AdminRejectUserParams, AdminGetFirewallEventsQueryParams } from "@workspace/api-zod";
 import { decryptTransactionData } from "../lib/crypto";
 import { desc } from "drizzle-orm";
 
@@ -164,6 +164,90 @@ router.get("/stats", requireAdmin, async (req, res) => {
     totalTransfers: parseFloat(t.total_transfers),
     openComplaints: parseInt(c.open_count),
   });
+});
+
+router.get("/firewall", requireAdmin, async (req, res) => {
+  const parsed = AdminGetFirewallEventsQueryParams.safeParse(req.query);
+  const severityFilter = parsed.success ? parsed.data.severity : undefined;
+  const limit = parsed.success ? (parsed.data.limit ?? 100) : 100;
+
+  const txs = await db.select().from(transactionsTable)
+    .orderBy(desc(transactionsTable.createdAt))
+    .limit(500);
+
+  // Enrich transactions with AES-decrypted data and compute risk scores
+  const events = await Promise.all(txs.map(async (tx) => {
+    let dec: any = {};
+    try { dec = await decryptTransactionData(tx.encryptedData); } catch {}
+
+    const amount = parseFloat(tx.amount);
+    const hour = new Date(tx.createdAt).getHours();
+    const riskFlags: string[] = [];
+    let riskScore = 0;
+
+    // Amount-based risk
+    if (amount >= 50000) { riskFlags.push("LARGE_TRANSACTION_50K+"); riskScore += 50; }
+    else if (amount >= 20000) { riskFlags.push("HIGH_VALUE_TRANSACTION_20K+"); riskScore += 30; }
+    else if (amount >= 5000) { riskFlags.push("ELEVATED_TRANSACTION_5K+"); riskScore += 15; }
+
+    // Time-based risk (unusual hours: 11pm–5am)
+    if (hour >= 23 || hour <= 5) { riskFlags.push("ODD_HOUR_TRANSACTION"); riskScore += 20; }
+
+    // Transfer-specific risk
+    if (tx.type === "transfer") { riskFlags.push("OUTBOUND_TRANSFER"); riskScore += 10; }
+
+    // Failed tx risk
+    if (tx.status === "failed") { riskFlags.push("FAILED_TRANSACTION"); riskScore += 40; }
+
+    if (riskScore === 0) riskFlags.push("NORMAL_ACTIVITY");
+
+    let severity: "critical" | "high" | "medium" | "low" | "info";
+    if (riskScore >= 70) severity = "critical";
+    else if (riskScore >= 45) severity = "high";
+    else if (riskScore >= 25) severity = "medium";
+    else if (riskScore >= 10) severity = "low";
+    else severity = "info";
+
+    const descriptions: Record<string, string> = {
+      critical: "Critical risk — potential fraud or large suspicious transfer",
+      high: "High risk — significant financial activity requiring review",
+      medium: "Medium risk — unusual pattern detected",
+      low: "Low risk — minor anomaly observed",
+      info: "Normal transaction logged",
+    };
+
+    return {
+      id: tx.id,
+      eventId: `EVT-${String(tx.id).padStart(6, "0")}`,
+      timestamp: tx.createdAt.toISOString(),
+      severity,
+      riskScore,
+      type: tx.type,
+      amount,
+      fromAccount: dec.fromAccountNumber ?? null,
+      toAccount: dec.toAccountNumber ?? null,
+      fromName: dec.fromName ?? null,
+      toName: dec.toName ?? null,
+      status: tx.status,
+      riskFlags,
+      description: descriptions[severity],
+    };
+  }));
+
+  // Filter by severity if requested
+  const filtered = severityFilter ? events.filter(e => e.severity === severityFilter) : events;
+  const paginated = filtered.slice(0, limit);
+
+  const stats = {
+    total: events.length,
+    critical: events.filter(e => e.severity === "critical").length,
+    high: events.filter(e => e.severity === "high").length,
+    medium: events.filter(e => e.severity === "medium").length,
+    low: events.filter(e => e.severity === "low").length,
+    info: events.filter(e => e.severity === "info").length,
+  };
+
+  res.json({ events: paginated, stats });
 });
 
 export default router;

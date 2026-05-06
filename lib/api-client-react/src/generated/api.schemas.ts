@@ -245,6 +245,57 @@ export interface AdminStats {
   openComplaints: number;
 }
 
+export type FirewallEventSeverity =
+  (typeof FirewallEventSeverity)[keyof typeof FirewallEventSeverity];
+
+export const FirewallEventSeverity = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+  low: "low",
+  info: "info",
+} as const;
+
+export type FirewallEventType =
+  (typeof FirewallEventType)[keyof typeof FirewallEventType];
+
+export const FirewallEventType = {
+  deposit: "deposit",
+  withdrawal: "withdrawal",
+  transfer: "transfer",
+} as const;
+
+export interface FirewallEvent {
+  id: number;
+  eventId: string;
+  timestamp: string;
+  severity: FirewallEventSeverity;
+  riskScore: number;
+  type: FirewallEventType;
+  amount: number;
+  fromAccount?: string | null;
+  toAccount?: string | null;
+  fromName?: string | null;
+  toName?: string | null;
+  status: string;
+  riskFlags: string[];
+  description: string;
+}
+
+export type FirewallResponseStats = {
+  total: number;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  info: number;
+};
+
+export interface FirewallResponse {
+  events: FirewallEvent[];
+  stats: FirewallResponseStats;
+}
+
 export type GetTransactionHistoryParams = {
   limit?: number;
   offset?: number;
@@ -276,4 +327,20 @@ export const AdminGetTransactionsType = {
   deposit: "deposit",
   withdrawal: "withdrawal",
   transfer: "transfer",
+} as const;
+
+export type AdminGetFirewallEventsParams = {
+  severity?: AdminGetFirewallEventsSeverity;
+  limit?: number;
+};
+
+export type AdminGetFirewallEventsSeverity =
+  (typeof AdminGetFirewallEventsSeverity)[keyof typeof AdminGetFirewallEventsSeverity];
+
+export const AdminGetFirewallEventsSeverity = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+  low: "low",
+  info: "info",
 } as const;

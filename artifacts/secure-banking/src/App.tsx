@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminTransactions from "./pages/AdminTransactions";
 import AdminComplaints from "./pages/AdminComplaints";
+import AdminFirewall from "./pages/AdminFirewall";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,7 @@ function Router() {
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/transactions" component={AdminTransactions} />
       <Route path="/admin/complaints" component={AdminComplaints} />
+      <Route path="/admin/firewall" component={AdminFirewall} />
       
       <Route component={NotFound} />
     </Switch>

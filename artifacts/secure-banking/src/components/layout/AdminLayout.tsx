@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useLogout } from "@workspace/api-client-react";
-import { LogOut, Home, Users, ArrowRightLeft, MessageSquare } from "lucide-react";
+import { LogOut, Home, Users, ArrowRightLeft, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/transactions", label: "Transactions", icon: ArrowRightLeft },
     { href: "/admin/complaints", label: "Complaints", icon: MessageSquare },
+    { href: "/admin/firewall", label: "Firewall", icon: Shield },
   ];
 
   return (

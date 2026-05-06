@@ -457,6 +457,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminStats"
 
+  /admin/firewall:
+    get:
+      operationId: adminGetFirewallEvents
+      tags: [admin]
+      summary: SIEM firewall - enriched transaction events with risk scoring
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low, info]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Firewall events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirewallResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -796,3 +820,69 @@ components:
         openComplaints:
           type: integer
       required: [totalUsers, pendingUsers, activeUsers, rejectedUsers, totalTransactions, totalDeposits, totalWithdrawals, totalTransfers, openComplaints]
+
+    FirewallEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        eventId:
+          type: string
+        timestamp:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+        riskScore:
+          type: integer
+        type:
+          type: string
+          enum: [deposit, withdrawal, transfer]
+        amount:
+          type: number
+        fromAccount:
+          type: string
+          nullable: true
+        toAccount:
+          type: string
+          nullable: true
+        fromName:
+          type: string
+          nullable: true
+        toName:
+          type: string
+          nullable: true
+        status:
+          type: string
+        riskFlags:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+      required: [id, eventId, timestamp, severity, riskScore, type, amount, status, riskFlags, description]
+
+    FirewallResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/FirewallEvent"
+        stats:
+          type: object
+          properties:
+            total:
+              type: integer
+            critical:
+              type: integer
+            high:
+              type: integer
+            medium:
+              type: integer
+            low:
+              type: integer
+            info:
+              type: integer
+          required: [total, critical, high, medium, low, info]
+      required: [events, stats]

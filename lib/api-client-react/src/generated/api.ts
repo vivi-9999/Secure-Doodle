@@ -19,6 +19,7 @@ import type {
 import type {
   AccountLookup,
   AdminComplaint,
+  AdminGetFirewallEventsParams,
   AdminGetTransactionsParams,
   AdminGetUsersParams,
   AdminLoginBody,
@@ -30,6 +31,7 @@ import type {
   CreateComplaintBody,
   DepositBody,
   ErrorResponse,
+  FirewallResponse,
   GetTransactionHistoryParams,
   HealthStatus,
   LoginBody,
@@ -1820,6 +1822,106 @@ export function useAdminGetStats<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getAdminGetStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary SIEM firewall - enriched transaction events with risk scoring
+ */
+export const getAdminGetFirewallEventsUrl = (
+  params?: AdminGetFirewallEventsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/firewall?${stringifiedParams}`
+    : `/api/admin/firewall`;
+};
+
+export const adminGetFirewallEvents = async (
+  params?: AdminGetFirewallEventsParams,
+  options?: RequestInit,
+): Promise<FirewallResponse> => {
+  return customFetch<FirewallResponse>(getAdminGetFirewallEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminGetFirewallEventsQueryKey = (
+  params?: AdminGetFirewallEventsParams,
+) => {
+  return [`/api/admin/firewall`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminGetFirewallEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminGetFirewallEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminGetFirewallEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminGetFirewallEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminGetFirewallEventsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminGetFirewallEvents>>
+  > = ({ signal }) =>
+    adminGetFirewallEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetFirewallEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminGetFirewallEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminGetFirewallEvents>>
+>;
+export type AdminGetFirewallEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary SIEM firewall - enriched transaction events with risk scoring
+ */
+
+export function useAdminGetFirewallEvents<
+  TData = Awaited<ReturnType<typeof adminGetFirewallEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminGetFirewallEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminGetFirewallEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminGetFirewallEventsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

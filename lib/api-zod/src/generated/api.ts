@@ -385,3 +385,42 @@ export const AdminGetStatsResponse = zod.object({
   totalTransfers: zod.number(),
   openComplaints: zod.number(),
 });
+
+/**
+ * @summary SIEM firewall - enriched transaction events with risk scoring
+ */
+export const adminGetFirewallEventsQueryLimitDefault = 100;
+
+export const AdminGetFirewallEventsQueryParams = zod.object({
+  severity: zod.enum(["critical", "high", "medium", "low", "info"]).optional(),
+  limit: zod.coerce.number().default(adminGetFirewallEventsQueryLimitDefault),
+});
+
+export const AdminGetFirewallEventsResponse = zod.object({
+  events: zod.array(
+    zod.object({
+      id: zod.number(),
+      eventId: zod.string(),
+      timestamp: zod.string(),
+      severity: zod.enum(["critical", "high", "medium", "low", "info"]),
+      riskScore: zod.number(),
+      type: zod.enum(["deposit", "withdrawal", "transfer"]),
+      amount: zod.number(),
+      fromAccount: zod.string().nullish(),
+      toAccount: zod.string().nullish(),
+      fromName: zod.string().nullish(),
+      toName: zod.string().nullish(),
+      status: zod.string(),
+      riskFlags: zod.array(zod.string()),
+      description: zod.string(),
+    }),
+  ),
+  stats: zod.object({
+    total: zod.number(),
+    critical: zod.number(),
+    high: zod.number(),
+    medium: zod.number(),
+    low: zod.number(),
+    info: zod.number(),
+  }),
+});
