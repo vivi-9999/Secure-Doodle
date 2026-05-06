@@ -14,6 +14,7 @@ COPY lib/api-spec/package.json ./lib/api-spec/
 COPY scripts/package.json ./scripts/
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY artifacts/secure-banking/package.json ./artifacts/secure-banking/
+COPY artifacts/mockup-sandbox/package.json ./artifacts/mockup-sandbox/
 
 # Install Node dependencies
 RUN pnpm install
